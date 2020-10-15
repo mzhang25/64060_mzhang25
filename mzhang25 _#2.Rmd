@@ -1,0 +1,80 @@
+---
+title: "homework#2"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+
+data<-read.csv("C:/Users/Administrator/Desktop/UniversalBank.csv")
+head(data)
+library(dplyr)
+library(caret)
+library(FNN)
+mydata<-data[,-c(1,5)]
+mydata<-predict(dummyVars(~.+as.factor(Education)-Education,data=mydata),mydata)
+set.seed(20)
+validation_index<-createDataPartition(1:nrow(mydata),p=0.4,list=FALSE)
+validation_data<-mydata[validation_index,]
+train_data<-mydata[-validation_index,]
+new<-data.frame(Age = 40, Experience = 10, Income = 84, Family = 2, CCAvg = 2, `as.factor(Education)1` = 0, `as.factor(Education)2` = 1,
+                `as.factor(Education)3` = 0, Mortgage = 0, Securities.Account = 0, CD.Account = 0, Online = 1, CreditCard = 1)
+nn <- knn(train = train_data[,-8], test = new, 
+          cl = train_data[,8], k = 1, prob=TRUE)
+nn
+Serach_grid <- expand.grid(k=c(5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100))
+model<-train(Personal.Loan~., data=train_data, 
+             method="knn", tuneGrid=Serach_grid)
+model
+plot(model$results$k,model$results$RMSE)
+#K=70 IS THE BEST
+#
+nn <- knn(train = train_data[,-8], test = validation_data[,-8], 
+          cl = train_data[,8], k = 70, prob=TRUE)
+confusionMatrix(nn,as.factor(validation_data[,8]))
+#
+nn <- knn(train = train_data[,-8], test = new, 
+          cl = train_data[,8], k = 70, prob=TRUE)
+          
+#
+train_index<-createDataPartition(as.numeric(rownames(mydata)),p=0.5,list=FALSE)
+train_data<-mydata[train_index,]
+test_valid_data<-mydata[-train_index,]
+valid_index<-createDataPartition(as.numeric(rownames(test_valid_data)),
+                                 p=0.6,list=FALSE)
+valid_data<-test_valid_data[valid_index,]
+test_data<-test_valid_data[-valid_index,]
+
+nn1 <- knn(train = train_data[,-8], test = valid_data[,-8], 
+          cl = train_data[,8], k = 70, prob=TRUE)
+
+nn2 <- knn(train = train_data[,-8], test = test_data[,-8], 
+           cl = train_data[,8], k = 70, prob=TRUE)
+
+confusionMatrix(nn1,as.factor(valid_data[,8]))
+confusionMatrix(nn2,as.factor(test_data[,8]))
