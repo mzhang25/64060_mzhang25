@@ -1,0 +1,57 @@
+---
+title: "mzhang25#3"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing 
+
+of the R code that generated the plot.
+
+
+library(caret)
+library(ISLR)
+library(e1071)
+set.seed(123)
+df<-read.csv("C:/Users/Administrator/Desktop/FlightDelays.csv")
+df$Weather<-as.factor(df$Weather)
+df$DAY_WEEK<-as.factor(df$DAY_WEEK)
+df$DAY_OF_MONTH<-as.factor(df$DAY_OF_MONTH)
+df$FL_DATE<-as.factor(df$FL_DATE)
+samp<-createDataPartition(1:nrow(df),p=0.6,list=FALSE)
+train<-df[samp,]
+test<-df[-samp,]
+mod<-naiveBayes(Flight.Status~CARRIER+DEST+FL_DATE+ORIGIN+DAY_WEEK+DAY_OF_MONTH,data=train)
+mod
+mod$table$ORIGIN
+mod$table$ORIGIN[1,]*sum(train$Flight.Status=='delayed')
+mod$table$ORIGIN[1,]*sum(train$Flight.Status=='ontime')
+library(pROC)
+pred.class<-predict(mod,test)
+table(pred.class,test$Flight.Status)
+pred<-predict(mod,test,type='raw')[,2]
+roc1<-roc(test$Flight.Status,pred)
+plot(roc1)
